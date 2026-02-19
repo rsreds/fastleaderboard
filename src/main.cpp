@@ -2,6 +2,7 @@
 #include "score.h"
 #include "leaderboard.h"
 #include "listener.h"
+#include "redis_service.h"
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -19,8 +20,9 @@ int main(int argc, char* argv[]) {
 
     net::io_context ioc{threads};
 
-    Leaderboard lb;
-    std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb)->run();
+    Leaderboard lb("TEST");
+    RedisService redis_service(ioc);
+    std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service)->run();
 
     std::cout << "Leaderboard server listening on 0.0.0.0:" << port
               << " (" << threads << " threads)\n";

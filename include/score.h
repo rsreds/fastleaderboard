@@ -3,30 +3,35 @@
 
 #include <string>
 #include <chrono>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/json.hpp>
 
 class Score
 {
 private:
-    uid_t _player_id;
-    float _score;
+    std::string _player_uuid;
+    int _score;
     time_t _timestamp;
+    // Redis member string: "{score}:{timestamp}" 
+    // Redis key: leaderboard:{lb_id}:player:{player_id}
 
 public:
-    Score(uid_t player_id, float score, time_t timestamp)
-        : _player_id(player_id), _score(score), _timestamp(timestamp) {};
-    uid_t player_id() const { return _player_id; }
-    void player_id(uid_t player_id) { _player_id = player_id; }
-    float score() const { return _score; }
-    void score(float score) { _score = score; }
+    Score(std::string player_uuid, int score, time_t timestamp)
+        : _player_uuid(std::move(player_uuid))
+        , _score(score)
+        , _timestamp(timestamp)
+    {}
+
+    const std::string& player_uuid() const { return _player_uuid; }
+    int score() const { return _score; }
     time_t timestamp() const { return _timestamp; }
-    void timestamp(time_t timestamp) { _timestamp = timestamp; }
-    friend bool operator==(const Score& lhs, const Score& rhs) {
-        return lhs._player_id == rhs._player_id && lhs._score == rhs._score && lhs._timestamp == rhs._timestamp;
-    }
+
+    friend bool operator==(const Score&, const Score&);
     boost::json::object to_json() const;
-    // Returns JSON without player_id (for player-specific endpoints)
-    boost::json::object to_json_minimal() const;
+    std::string to_redis_member() const;
+
 };
 
 #endif // SCORE_H

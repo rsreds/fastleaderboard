@@ -5,25 +5,25 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
-find_package(Boost 1.83.0 REQUIRED COMPONENTS json)
-
-# Add executable in the src directory
+find_package(Boost 1.84.0 REQUIRED COMPONENTS json)
+find_package(OpenSSL REQUIRED)
+# Add executable
 add_executable(fastleaderboard
-    src/main.cpp
-    src/listener.cpp
-    src/session.cpp
-    src/leaderboard.cpp
-    src/player.cpp
-    src/score.cpp
+src/main.cpp
+src/player.cpp
+src/listener.cpp
+src/score.cpp
+src/leaderboard.cpp
+src/redis_service.cpp
+src/boost_redis.cpp
 )
 
+# Include directories
 target_include_directories(fastleaderboard
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+PRIVATE
+${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# Link libraries
-target_link_libraries(fastleaderboard
-    PRIVATE
-    Boost::json
-)
+target_include_directories(fastleaderboard PRIVATE ${Boost_INCLUDE_DIRS})
+
+target_link_libraries(fastleaderboard PRIVATE Boost::json OpenSSL::SSL OpenSSL::Crypto)

@@ -2,8 +2,9 @@
 #define PARSED_REQUEST_H
 
 #include <string>
+#include <boost/beast.hpp>
 
-namespace http = beast::http;
+namespace http = boost::beast::http;
 using Request = http::request<http::string_body>;
 
 struct ParsedRequest

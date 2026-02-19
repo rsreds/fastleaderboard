@@ -1,5 +1,10 @@
 #include "player.h"
 #include <boost/json.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
+
 
 void Player::add_friend(uid_t friend_uid)
 {
@@ -16,10 +21,8 @@ void Player::remove_friend(uid_t friend_uid)
 boost::json::object Player::to_json() const
 {
     boost::json::object obj;
-    obj["player_id"] = _uid;
+    obj["player_id"] = _uuid;
     obj["username"] = _username;
-    obj["current_score"] = _current_score;
-    obj["last_updated"] = _last_updated;
     boost::json::array friends_array;
     for (const auto& friend_uid : _friends_list) {
         friends_array.push_back(friend_uid);
