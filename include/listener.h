@@ -4,16 +4,21 @@
 #include <memory>
 #include <boost/asio.hpp>
 
-using boost::asio::ip::tcp as tcp;
-using boost::
+#include "leaderboard.h"
+
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
 
 class Listener: public std::enable_shared_from_this<Listener>{
 private:
     tcp::acceptor acceptor_;
     tcp::socket socket_;
+    Leaderboard& lb_;
+    void do_accept();
 
 public:
-    Listener(net)
+    Listener(net::io_context& ioc, tcp::endpoint endpoint, Leaderboard& lb);
+    void run(){do_accept();};
 };
 
 #endif //LISTENER_H
