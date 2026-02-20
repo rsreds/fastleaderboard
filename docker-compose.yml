@@ -1,4 +1,11 @@
 services:
+  boost-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.boost
+    image: fastleaderboard-boost:1.90
+    profiles: ["build-only"]  # Won't start unless explicitly called
+
   fastleaderboard:
     build:
       context: .
@@ -6,9 +13,29 @@ services:
     container_name: fastleaderboard-backend
     ports:
       - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - PORT=8080
       - THREADS=4
     restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: fastleaderboard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis-data:
