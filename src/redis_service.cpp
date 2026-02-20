@@ -3,8 +3,8 @@
 
 RedisService::RedisService(net::io_context& ioc) {
     redis::config config;
-    config.addr.host = REDIS_HOST;
-    config.addr.port = REDIS_PORT;
+    config.addr.host = get_redis_host();
+    config.addr.port = get_redis_port();
 
     _redis_connection = std::make_shared<redis::connection>(ioc);
     _redis_connection->async_run(config, {}, [](boost::system::error_code ec) {

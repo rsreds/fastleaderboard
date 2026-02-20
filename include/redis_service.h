@@ -12,8 +12,17 @@ class RedisService
 {
 private:
     std::shared_ptr<redis::connection> _redis_connection;
-    static constexpr std::string_view REDIS_HOST = "93.44.134.143";
-    static constexpr std::string_view REDIS_PORT = "6379";
+    
+    static std::string get_redis_host() {
+        const char* env_host = std::getenv("REDIS_HOST");
+        return env_host ? std::string(env_host) : "localhost";
+    }
+    
+    static std::string get_redis_port() {
+        const char* env_port = std::getenv("REDIS_PORT");
+        return env_port ? std::string(env_port) : "6379";
+    }
+    
 public:
     explicit RedisService(net::io_context&);
     net::awaitable<void> submit_score(const std::string& leaderboard_id, const std::string& player_id, int score, time_t timestamp);

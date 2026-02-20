@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Version control
+.git/
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+README*
+
+# Temporary files
+*.log
+*.tmp
