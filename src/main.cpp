@@ -22,16 +22,22 @@ int main(int argc, char* argv[]) {
 
     Leaderboard lb("TEST");
     RedisService redis_service(ioc);
+    std::cerr << "Creating listener..." << std::endl;
     auto listener = std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service);
+    std::cerr << "Starting listener..." << std::endl;
     listener->run();
+    std::cerr << "Listener started" << std::endl;
 
     std::cerr << "Leaderboard server listening on 0.0.0.0:" << port
               << " (" << threads << " threads)" << std::endl;
 
+    std::cerr << "Starting io_context threads..." << std::endl;
     std::vector<std::thread> pool;
     pool.reserve(threads - 1);
     for (int i = 0; i < threads - 1; ++i)
         pool.emplace_back([&ioc] { ioc.run(); });
+    std::cerr << "Running main io_context..." << std::endl;
     ioc.run();
+    std::cerr << "io_context stopped, joining threads..." << std::endl;
     for (auto& t : pool) t.join();
 }

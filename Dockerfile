@@ -8,4 +8,4 @@ RUN cmake --build build -j$(nproc)
 
 EXPOSE 8080
 
-CMD ./build/fastleaderboard ${PORT:-8080} ${THREADS:-4}
+CMD ["/bin/bash", "-c", "./build/fastleaderboard ${PORT:-8080} ${THREADS:-4}"]

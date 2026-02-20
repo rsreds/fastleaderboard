@@ -71,21 +71,27 @@ net::awaitable<Response> handle_request(const Request& req, Leaderboard& lb, Red
 }
 
 net::awaitable<void> run_session(tcp::socket socket, Leaderboard& lb, RedisService& redis) {
+    std::cerr << "Session started\n";
     beast::tcp_stream stream(std::move(socket));
     beast::flat_buffer buffer;
 
     for (;;) {
         Request req;
+        std::cerr << "Reading request...\n";
         auto [ec, _] = co_await http::async_read(stream, buffer, req,
             net::as_tuple(net::use_awaitable));
 
+        std::cerr << "Read complete, ec=" << ec.message() << "\n";
         if (ec == http::error::end_of_stream) break;
         if (ec) co_return;
 
+        std::cerr << "Handling request...\n";
         auto res  = co_await handle_request(req, lb, redis);
         bool keep = res.keep_alive();
 
+        std::cerr << "Writing response...\n";
         co_await http::async_write(stream, res, net::use_awaitable);
+        std::cerr << "Response written\n";
 
         if (!keep) break;
     }
@@ -96,20 +102,40 @@ net::awaitable<void> run_session(tcp::socket socket, Leaderboard& lb, RedisServi
 
 Listener::Listener(net::io_context& ioc, tcp::endpoint endpoint, Leaderboard& lb, RedisService& redis_service)
     : ioc_(ioc), acceptor_(ioc), lb_(lb), redis_service_(redis_service) {
+    std::cerr << "Listener constructor: opening endpoint " << endpoint << "\n";
     acceptor_.open(endpoint.protocol());
+    std::cerr << "Listener constructor: setting reuse_address\n";
     acceptor_.set_option(net::socket_base::reuse_address(true));
+    std::cerr << "Listener constructor: binding\n";
     acceptor_.bind(endpoint);
+    std::cerr << "Listener constructor: listening\n";
     acceptor_.listen(net::socket_base::max_listen_connections);
+    std::cerr << "Listener constructor: complete\n";
 }
 
 void Listener::do_accept() {
+    std::cerr << "Waiting for connection..." << std::endl;
     acceptor_.async_accept(
         net::make_strand(ioc_),
         [self = shared_from_this()](beast::error_code ec, tcp::socket socket) {
-            if (!ec)
-                net::co_spawn(self->ioc_,
-                    run_session(std::move(socket), self->lb_, self->redis_service_),
-                    net::detached);
-            self->do_accept();
+            try {
+                std::cerr << "Connection received! ec=" << ec.message() << std::endl;
+                if (!ec) {
+                    std::cerr << "Spawning session coroutine" << std::endl;
+                    net::co_spawn(self->ioc_,
+                        run_session(std::move(socket), self->lb_, self->redis_service_),
+                        [](std::exception_ptr e) {
+                            if (e) {
+                                try { std::rethrow_exception(e); }
+                                catch (const std::exception& ex) {
+                                    std::cerr << "Session exception: " << ex.what() << std::endl;
+                                }
+                            }
+                        });
+                }
+                self->do_accept();
+            } catch (const std::exception& e) {
+                std::cerr << "Accept callback exception: " << e.what() << std::endl;
+            }
         });
 }

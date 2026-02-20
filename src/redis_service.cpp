@@ -14,6 +14,7 @@ RedisService::RedisService(net::io_context& ioc) {
 }
 
 net::awaitable<void> RedisService::submit_score(const std::string& leaderboard_id, const std::string& player_id, int score, time_t timestamp) {
+    std::cerr << "Building Redis request..." << std::endl;
     Score new_score(player_id, score, timestamp);
     redis::request req;
     req.push("MULTI");
@@ -22,6 +23,7 @@ net::awaitable<void> RedisService::submit_score(const std::string& leaderboard_i
          score, new_score.to_redis_member());
     req.push("EXEC");
 
+    std::cerr << "Preparing Redis response..." << std::endl;
     redis::response<
         redis::ignore_t,  // MULTI → "OK"
         redis::ignore_t,  // ZADD ranking → QUEUED
@@ -29,7 +31,9 @@ net::awaitable<void> RedisService::submit_score(const std::string& leaderboard_i
         redis::ignore_t   // EXEC → array of results
     > resp;
 
+    std::cerr << "Executing Redis request..." << std::endl;
     co_await _redis_connection->async_exec(req, resp, net::use_awaitable);
+    std::cerr << "Redis request complete" << std::endl;
 }
 
 net::awaitable<std::vector<Score>> RedisService::get_top_scores(const std::string& leaderboard_id, std::size_t n) {
