@@ -5,6 +5,7 @@ RedisService::RedisService(net::io_context& ioc) {
     redis::config config;
     config.addr.host = get_redis_host();
     config.addr.port = get_redis_port();
+    std::cerr << "Connecting to Redis at " << config.addr.host << ":" << config.addr.port << "\n";
 
     _redis_connection = std::make_shared<redis::connection>(ioc);
     _redis_connection->async_run(config, {}, [](boost::system::error_code ec) {
