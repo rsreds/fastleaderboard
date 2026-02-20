@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service)->run();
 
     std::cerr << "Leaderboard server listening on 0.0.0.0:" << port
-              << " (" << threads << " threads)\n";
+              << " (" << threads << " threads)" << std::endl;
 
     std::vector<std::thread> pool;
     pool.reserve(threads - 1);

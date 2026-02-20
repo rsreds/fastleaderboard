@@ -17,7 +17,7 @@ net::awaitable<Response> handle_request(const Request& req, Leaderboard& lb, Red
 
     using namespace json_helpers;
 
-    std::cout << "method=" << pr.method << " path=" << pr.path << "\n";
+    std::cerr << "Received request: method=" << pr.method << " path=" << pr.path << "\n";
 
     if (pr.method == "OPTIONS") {
         Response res{http::status::no_content, ver};
@@ -31,10 +31,13 @@ net::awaitable<Response> handle_request(const Request& req, Leaderboard& lb, Red
 
     if (pr.method == "POST" && pr.path == "/leaderboard/submit") {
         try {
+            std::cerr << "Parsing submit request body\n";
             auto json_body      = boost::json::parse(pr.body).as_object();
             std::string player  = json_body.at("player_name").as_string().c_str();
             int score          = static_cast<int>(json_body.at("score").as_int64());
+            std::cerr << "Submitting score to Redis: player=" << player << " score=" << score << "\n";
             co_await redis_service.submit_score(lb.id(), player, score, std::time(nullptr));
+            std::cerr << "Score submitted successfully\n";
             co_return make_json_response(ver, ka, {{"message", "Score submitted"}});
         } catch (const boost::system::system_error& e) {
             std::cerr << "Redis error: " << e.what() << "\n";
