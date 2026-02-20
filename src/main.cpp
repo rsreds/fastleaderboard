@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
 
     Leaderboard lb("TEST");
     RedisService redis_service(ioc);
-    std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service)->run();
+    auto listener = std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service);
+    listener->run();
 
     std::cerr << "Leaderboard server listening on 0.0.0.0:" << port
               << " (" << threads << " threads)" << std::endl;
