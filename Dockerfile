@@ -1,4 +1,4 @@
-FROM fastleaderboard-boost:1.90
+FROM fastleaderboard-boost
 
 WORKDIR /app
 COPY . .

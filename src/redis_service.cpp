@@ -32,7 +32,12 @@ net::awaitable<void> RedisService::submit_score(const std::string& leaderboard_i
     > resp;
 
     std::cerr << "Executing Redis request..." << std::endl;
-    co_await _redis_connection->async_exec(req, resp, net::use_awaitable);
+    boost::system::error_code ec;
+    co_await _redis_connection->async_exec(req, resp, net::redirect_error(net::use_awaitable, ec));
+    if (ec) {
+        std::cerr << "Redis exec error: " << ec.message() << std::endl;
+        throw boost::system::system_error(ec);
+    }
     std::cerr << "Redis request complete" << std::endl;
 }
 

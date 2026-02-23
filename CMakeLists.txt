@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
-find_package(Boost 1.84.0 REQUIRED COMPONENTS json)
+find_package(Boost 1.87.0 REQUIRED COMPONENTS json)
 find_package(OpenSSL REQUIRED)
 # Add executable
 add_executable(fastleaderboard

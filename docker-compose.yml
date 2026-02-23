@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.boost
-    image: fastleaderboard-boost:1.90
+    image: fastleaderboard-boost:1.87
     profiles: ["build-only"]  # Won't start unless explicitly called
 
   fastleaderboard:
