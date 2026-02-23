@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/beast.hpp>
+#include <regex>
 
 namespace http = boost::beast::http;
 using Request = http::request<http::string_body>;
@@ -40,5 +41,14 @@ ParsedRequest parse_request(const Request& raw_request){
     return parsed_request;
 }
 
+
+std::optional<std::string> extract_leaderboard_id(const std::string& path) {
+    std::regex pattern(R"(^/leaderboard/([^/]+)(/.*)?$)");
+    std::smatch match;
+    if (std::regex_match(path, match, pattern)) {
+        return match[1].str();
+    }
+    return std::nullopt;
+}
 
 #endif //PARSED_REQUEST_H

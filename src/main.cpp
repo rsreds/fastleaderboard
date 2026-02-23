@@ -1,6 +1,5 @@
 #include "player.h"
 #include "score.h"
-#include "leaderboard.h"
 #include "listener.h"
 #include "redis_service.h"
 #include <boost/beast/core.hpp>
@@ -20,10 +19,9 @@ int main(int argc, char* argv[]) {
 
     net::io_context ioc{threads};
 
-    Leaderboard lb("TEST");
     RedisService redis_service(ioc);
     std::cerr << "Creating listener..." << std::endl;
-    auto listener = std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, lb, redis_service);
+    auto listener = std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, redis_service);
     std::cerr << "Starting listener..." << std::endl;
     listener->run();
     std::cerr << "Listener started" << std::endl;
