@@ -19,4 +19,6 @@ public:
     void run() { do_accept(); }
 };
 
+bool verify_signature(const std::string& player_name, int score, long timestamp, const std::string& signature);
+
 #endif //LISTENER_H

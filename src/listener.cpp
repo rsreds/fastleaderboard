@@ -6,6 +6,9 @@
 #include <boost/beast/http.hpp>
 #include <regex>
 #include <iostream>
+#include <openssl/hmac.h>
+#include <boost/algorithm/hex.hpp>
+#include <algorithm>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -80,7 +83,16 @@ net::awaitable<Response> handle_request(const Request& req, RedisService& redis_
             auto json_body      = boost::json::parse(pr.body).as_object();
             std::string player  = json_body.at("player_name").as_string().c_str();
             int score          = static_cast<int>(json_body.at("score").as_int64());
-            std::cerr << "Submitting score to Redis: player=" << player << " score=" << score << "\n";
+            long timestamp     = json_body.at("timestamp").as_int64();
+            std::string signature = json_body.at("signature").as_string().c_str();
+            std::cerr << "Veryfing request for player=" << player << " score=" << score << " timestamp=" << timestamp << '\n';
+            if (std::abs(std::time(nullptr) - timestamp) > 60) {
+                co_return make_error_response(ver, ka, http::status::bad_request, "Expired request");
+            }
+            if (!verify_signature(player, score, timestamp, signature)) {
+                co_return make_error_response(ver, ka, http::status::bad_request, "Invalid signature");
+            }
+            std::cerr << "Submitting score to Redis: player=" << player << " score=" << score << '\n';
             co_await redis_service.submit_score(leaderboard_id, player, score, std::time(nullptr));
             std::cerr << "Score submitted successfully\n";
             co_return make_json_response(ver, ka, {{"message", "Score submitted"}});
@@ -190,4 +202,20 @@ void Listener::do_accept() {
                 std::cerr << "Accept callback exception: " << e.what() << std::endl;
             }
         });
+}
+
+bool verify_signature(const std::string& player_name, int score, long timestamp, const std::string& signature) {
+    constexpr std::string_view secret = "***REMOVED***";
+    std::string message = player_name + ":" + std::to_string(score) + ":" + std::to_string(timestamp);
+    auto digest = HMAC(EVP_sha256(), secret.data(), secret.size(), reinterpret_cast<const unsigned char*>(message.data()), message.size(), nullptr, nullptr);
+    size_t digest_len = 32; // SHA256 produces a 32-byte hash
+    std::string expected_signature = boost::algorithm::hex(std::string(reinterpret_cast<const char*>(digest), digest_len));
+    std::transform(expected_signature.begin(), expected_signature.end(), expected_signature.begin(), [](auto c){ return std::tolower(c); });
+    bool result  = expected_signature == signature;
+    if (!result) {
+        std::cerr << "Signature verification failed:\n"
+                  << "  Provided signature: " << signature << "\n"
+                  << "  Expected signature: " << expected_signature << "\n";
+    }
+    return result;
 }
