@@ -21,7 +21,10 @@ services:
       - REDIS_PORT=6379
       - PORT=8080
       - THREADS=4
+      - SECRET_FILE=/run/secrets/secret_key
     restart: unless-stopped
+    secrets:
+      - secret_key
 
   redis:
     image: redis:7-alpine
@@ -39,3 +42,7 @@ services:
 
 volumes:
   redis-data:
+
+secrets:
+  secret_key:
+    file: ./secret_key.txt

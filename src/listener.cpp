@@ -9,6 +9,8 @@
 #include <openssl/hmac.h>
 #include <boost/algorithm/hex.hpp>
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -204,8 +206,21 @@ void Listener::do_accept() {
         });
 }
 
+std::string load_secret() {
+    const char* path = std::getenv("SECRET_FILE");
+    if (!path) path = "/run/secrets/secret_key";
+
+    std::ifstream f(path);
+    if (!f) throw std::runtime_error("Cannot open secret file");
+
+    std::string secret;
+    std::getline(f, secret);
+    return secret;
+}
+
 bool verify_signature(const std::string& player_name, int score, long timestamp, const std::string& signature) {
-    constexpr std::string_view secret = "***REMOVED***";
+    std::string secret = load_secret();
+    std::cerr << "Verifying signature with secret: " << secret << "\n";
     std::string message = player_name + ":" + std::to_string(score) + ":" + std::to_string(timestamp);
     auto digest = HMAC(EVP_sha256(), secret.data(), secret.size(), reinterpret_cast<const unsigned char*>(message.data()), message.size(), nullptr, nullptr);
     size_t digest_len = 32; // SHA256 produces a 32-byte hash
